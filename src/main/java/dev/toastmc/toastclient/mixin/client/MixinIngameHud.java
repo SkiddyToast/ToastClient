@@ -5,6 +5,7 @@ import dev.toastmc.toastclient.api.events.OverlayRenderEvent;
 import dev.toastmc.toastclient.impl.module.render.NoRender;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,12 +28,15 @@ public class MixinIngameHud {
 
     @Inject(
             at = {@At("HEAD")},
-            method = {"renderPumpkinOverlay()V"},
+            method = {"renderOverlay"},
             cancellable = true
     )
-    private void on(CallbackInfo ci) {
-        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getPumpkin().getValue())
-            ci.cancel();
+    private void on(Identifier texture, float opacity, CallbackInfo ci) {
+        if (NoRender.INSTANCE.isEnabled() && NoRender.INSTANCE.getPumpkin().getValue()) {
+            if (texture.getPath().equals("textures/misc/pumpkinblur.png")) {
+                ci.cancel();
+            }
+        }
     }
 
 }

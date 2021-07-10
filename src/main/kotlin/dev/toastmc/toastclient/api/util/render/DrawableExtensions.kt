@@ -8,6 +8,7 @@ import dev.toastmc.toastclient.impl.module.client.Font
 import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.render.BufferRenderer
 import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
@@ -24,7 +25,7 @@ interface DrawableExtensions {
         RenderSystem.enableBlend()
         RenderSystem.disableTexture()
         RenderSystem.defaultBlendFunc()
-        bufferBuilder.begin(1, VertexFormats.POSITION_COLOR)
+        bufferBuilder.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR)
         bufferBuilder.vertex(matrix, x0, y0, 0f).color(color.red, color.green, color.blue,color.alpha).next()
         bufferBuilder.vertex(matrix, x1, y1, 0f).color(color.red, color.green, color.blue,color.alpha).next()
         bufferBuilder.end()
@@ -120,7 +121,7 @@ interface DrawableExtensions {
         RenderSystem.enableBlend()
         RenderSystem.disableTexture()
         RenderSystem.defaultBlendFunc()
-        bufferBuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR)
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR)
         bufferBuilder.vertex(matrix, x1.toFloat(), y2.toFloat(), 0.0f).color(color.red, color.green, color.blue, color.alpha).next()
         bufferBuilder.vertex(matrix, x2.toFloat(), y2.toFloat(), 0.0f).color(color.red, color.green, color.blue, color.alpha).next()
         bufferBuilder.vertex(matrix, x2.toFloat(), y1.toFloat(), 0.0f).color(color.red, color.green, color.blue, color.alpha).next()
@@ -140,24 +141,20 @@ interface DrawableExtensions {
         colorStart: ToastColor,
         colorEnd: ToastColor,
     ) {
-        RenderSystem.disableTexture()
-        RenderSystem.enableBlend()
-        RenderSystem.disableAlphaTest()
-        RenderSystem.defaultBlendFunc()
-        RenderSystem.shadeModel(7425)
+        RenderSystem.enableBlend();
+        RenderSystem.disableTexture();
+        RenderSystem.defaultBlendFunc();
         val tessellator = Tessellator.getInstance()
         val bufferBuilder = tessellator.buffer
         val matrix = matrices.peek().model
-        bufferBuilder.begin(GL11.GL_QUADS, VertexFormats.POSITION_COLOR)
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR)
         bufferBuilder.vertex(matrix, xEnd.toFloat(), yStart.toFloat(), 0f).color(colorStart.red, colorStart.green, colorStart.blue, colorStart.alpha).next()
         bufferBuilder.vertex(matrix, xStart.toFloat(), yStart.toFloat(), 0f).color(colorStart.red, colorStart.green, colorStart.blue, colorStart.alpha).next()
         bufferBuilder.vertex(matrix, xStart.toFloat(), yEnd.toFloat(), 0f).color(colorEnd.red, colorEnd.green, colorEnd.blue, colorEnd.alpha).next()
         bufferBuilder.vertex(matrix, xEnd.toFloat(), yEnd.toFloat(), 0f).color(colorEnd.red, colorEnd.green, colorEnd.blue, colorEnd.alpha).next()
         tessellator.draw()
-        RenderSystem.shadeModel(7424)
-        RenderSystem.disableBlend()
-        RenderSystem.enableAlphaTest()
-        RenderSystem.enableTexture()
+        RenderSystem.enableTexture();
+        RenderSystem.disableBlend();
     }
 
     fun darken(color: ToastColor, amount: Double): ToastColor {

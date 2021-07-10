@@ -76,7 +76,7 @@ fun ClientPlayerEntity.lookAt(block: Vec3d, packet: Boolean) {
 
 fun ClientPlayerEntity.lookPacket(yaw: Float, pitch: Float) {
     networkHandler.sendPacket(
-        PlayerMoveC2SPacket.LookOnly(yaw, pitch, isOnGround)
+        PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, isOnGround)
     )
 }
 

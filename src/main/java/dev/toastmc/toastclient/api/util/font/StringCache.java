@@ -248,7 +248,7 @@ public class StringCache
         @Override
         public int compareTo(Integer i)
         {
-            return (stringIndex == i.intValue()) ? 0 : (stringIndex < i.intValue()) ? -1 : 1;
+            return (stringIndex == i) ? 0 : (stringIndex < i) ? -1 : 1;
         }
     }
 
@@ -337,14 +337,14 @@ public class StringCache
         if (entry == null)
         {
             /* layoutGlyphVector() requires a char[] so create it here and pass it around to avoid duplication later on */
-            char text[] = str.toCharArray();
+            char[] text = str.toCharArray();
 
             /* Strip all color codes from the string */
             entry = new Entry();
             int length = stripColorCodes(entry, str, text);
 
             /* Layout the entire string, splitting it up by color codes and the Unicode bidirectional algorithm */
-            List<Glyph> glyphList = new ArrayList();
+            List<Glyph> glyphList = new ArrayList<Glyph>();
             entry.advance = (int) layoutBidiString(glyphList, text, 0, length, entry.colors);
 
             /* Convert the accumulated Glyph list to an array for efficient storage */
@@ -424,7 +424,7 @@ public class StringCache
      * @param text       on input it should be an identical copy of str; on output it will be string with all color codes removed
      * @return the length of the new stripped string in text[]; actual text.length will not change because the array is not reallocated
      */
-    private int stripColorCodes(Entry cacheEntry, String str, char text[])
+    private int stripColorCodes(Entry cacheEntry, String str, char[] text)
     {
         List<ColorCode> colorList = new ArrayList();
         int start = 0, shift = 0, next;
@@ -524,7 +524,7 @@ public class StringCache
      * @param limit     the (offset + length) at which to stop performing the layout
      * @return the total advance (horizontal distance) of this string
      */
-    private int layoutBidiString(List<Glyph> glyphList, char text[], int start, int limit, ColorCode colors[])
+    private int layoutBidiString(List<Glyph> glyphList, char[] text, int start, int limit, ColorCode colors[])
     {
         int advance = 0;
 
@@ -551,7 +551,7 @@ public class StringCache
                 for (int index = 0; index < runCount; index++)
                 {
                     levels[index] = (byte) bidi.getRunLevel(index);
-                    ranges[index] = new Integer(index);
+                    ranges[index] = index;
                 }
                 Bidi.reorderVisually(levels, 0, ranges, 0, runCount);
 
@@ -581,7 +581,7 @@ public class StringCache
         }
     }
 
-    private int layoutStyle(List<Glyph> glyphList, char text[], int start, int limit, int layoutFlags, int advance, ColorCode colors[])
+    private int layoutStyle(List<Glyph> glyphList, char[] text, int start, int limit, int layoutFlags, int advance, ColorCode colors[])
     {
         int currentFontStyle = Font.PLAIN;
 
@@ -652,7 +652,7 @@ public class StringCache
      * @todo Correctly handling RTL font selection requires scanning the sctring from RTL as well.
      * @todo Use bitmap fonts as a fallback if no OpenType font could be found
      */
-    private int layoutString(List<Glyph> glyphList, char text[], int start, int limit, int layoutFlags, int advance, int style)
+    private int layoutString(List<Glyph> glyphList, char[] text, int start, int limit, int layoutFlags, int advance, int style)
     {
         /*
 * Convert all digits in the string to a '0' before layout to ensure that any glyphs replaced on the fly will all have
@@ -715,7 +715,7 @@ public class StringCache
      * @return the advance (horizontal distance) of this string plus the advance passed in as an argument
      * @todo need to ajust position of all glyphs if digits are present, by assuming every digit should be 0 in length
      */
-    private int layoutFont(List<Glyph> glyphList, char text[], int start, int limit, int layoutFlags, int advance, Font font)
+    private int layoutFont(List<Glyph> glyphList, char[] text, int start, int limit, int layoutFlags, int advance, Font font)
     {
         /*
 * Ensure that all glyphs used by the string are pre-rendered and cached in the texture. Only safe to do so from the

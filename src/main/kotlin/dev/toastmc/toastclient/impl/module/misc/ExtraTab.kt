@@ -19,7 +19,7 @@ object ExtraTab : Module("ExtraTab", Category.MISC) {
         val name = if (entry.displayName != null)
             entry.displayName
         else
-            Team.modifyText(entry.scoreboardTeam, LiteralText(entry.profile.name))
+            Team.decorateName(entry.scoreboardTeam, LiteralText(entry.profile.name))
 
         return if (highlightFriends.value && FriendManager.isFriend(entry.profile.id))
             name!!.shallowCopy().setStyle(Style.EMPTY.withColor(TextColor.fromRgb(ToastColor.rainbow(255).rgb)))

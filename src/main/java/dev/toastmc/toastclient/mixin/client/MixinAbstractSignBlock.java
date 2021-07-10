@@ -32,7 +32,7 @@ public class MixinAbstractSignBlock {
             BlockEntity blockEntity = world.getBlockEntity(pos);
             if (blockEntity instanceof SignBlockEntity) {
                 SignBlockEntity signBlockEntity = (SignBlockEntity) blockEntity;
-                Text[] lines = ((ISignBlockEntity) signBlockEntity).getText();
+                Text[] lines = ((ISignBlockEntity) signBlockEntity).getTexts();
                 StringBuilder textToCopy = new StringBuilder();
 
                 for (Text text : lines) {

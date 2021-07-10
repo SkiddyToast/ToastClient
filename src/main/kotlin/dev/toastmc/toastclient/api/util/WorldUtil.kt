@@ -20,6 +20,7 @@ import net.minecraft.util.registry.Registry
 import net.minecraft.world.Heightmap
 import net.minecraft.world.World
 import net.minecraft.world.chunk.Chunk
+import net.minecraft.world.chunk.WorldChunk
 import org.quantumclient.energy.Subscribe
 import java.util.*
 import java.util.function.Consumer
@@ -29,7 +30,7 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import kotlin.reflect.jvm.javaMethod
-import kotlin.streams.toList
+
 
 object WorldUtil {
 
@@ -75,13 +76,24 @@ object WorldUtil {
      * @return Tile entities inside the world which are loaded by the player collected as a map of BlockPos and Block
      * @see Chunk.getBlockEntityPositions
      */
-    fun World.getTileEntitiesInWorld(): LinkedHashMap<BlockPos, Block> {
-        val map =
-            LinkedHashMap<BlockPos, Block>()
-        this.blockEntities.forEach(Consumer { tilePos: BlockEntity ->
-            val pos = tilePos.pos
-            map[pos] = this.getBlockState(pos).block
-        })
+    fun World.getTileEntitiesInWorld(): LinkedHashMap<BlockPos, BlockEntity> {
+
+        val viewDist = mc.options.viewDistance
+
+        val map = LinkedHashMap<BlockPos, BlockEntity>()
+        for (x in -viewDist..viewDist) {
+            for (z in -viewDist..viewDist) {
+                val chunk = mc.world!!.chunkManager.getWorldChunk(
+                    mc.player!!.x.toInt() / 16 + x, mc.player!!.z
+                        .toInt() / 16 + z
+                )
+                if (chunk != null) {
+                    for(block in chunk.blockEntities){
+                        map.put(block.key, block.value)
+                    }
+                }
+            }
+        }
         return map
     }
 
@@ -481,7 +493,7 @@ object WorldUtil {
                     val yaw = Math.toDegrees(atan2(dz, dx)).toFloat() - 90
                     val pitch = (-Math.toDegrees(atan2(dy, dh))).toFloat()
                     player.networkHandler.sendPacket(
-                        PlayerMoveC2SPacket.LookOnly(
+                        PlayerMoveC2SPacket.LookAndOnGround(
                             yaw,
                             pitch,
                             player.isOnGround
