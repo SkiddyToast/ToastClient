@@ -6,16 +6,21 @@ import dev.toastmc.toastclient.api.util.font.FontAccessor
 import dev.toastmc.toastclient.api.util.mc
 import dev.toastmc.toastclient.impl.module.client.Font
 import net.minecraft.client.gui.DrawableHelper
-import net.minecraft.client.render.BufferRenderer
-import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.VertexFormat
-import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import org.lwjgl.opengl.GL11
 import java.awt.Rectangle
 import java.math.BigDecimal
 import java.math.RoundingMode
+import net.minecraft.client.render.BufferRenderer
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.Tessellator
+
+
+
 
 interface DrawableExtensions {
 
@@ -47,6 +52,7 @@ interface DrawableExtensions {
         startSmooth()
         if (Font.isEnabled()) {
             FontAccessor.fontRenderer.drawString(
+                matrices,
                 text.asString(),
                 (centerX - FontAccessor.fontRenderer.getWidth(text.asString()) / 2f),
                 (y + -FontAccessor.fontRenderer.getHeight(text.asString()) / 2f),
@@ -86,6 +92,7 @@ interface DrawableExtensions {
         startSmooth()
         if (Font.isEnabled()) {
             FontAccessor.fontRenderer.drawString(
+                matrices,
                 text.asString(),
                 x.toFloat(),
                 (y + -FontAccessor.fontRenderer.getHeight(text.asString()) / 2f),
@@ -121,6 +128,7 @@ interface DrawableExtensions {
         RenderSystem.enableBlend()
         RenderSystem.disableTexture()
         RenderSystem.defaultBlendFunc()
+        RenderSystem.setShader { GameRenderer.getPositionColorShader() }
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR)
         bufferBuilder.vertex(matrix, x1.toFloat(), y2.toFloat(), 0.0f).color(color.red, color.green, color.blue, color.alpha).next()
         bufferBuilder.vertex(matrix, x2.toFloat(), y2.toFloat(), 0.0f).color(color.red, color.green, color.blue, color.alpha).next()
