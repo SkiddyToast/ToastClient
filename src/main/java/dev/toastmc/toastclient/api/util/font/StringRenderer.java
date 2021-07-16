@@ -1,12 +1,9 @@
 package dev.toastmc.toastclient.api.util.font;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.opengl.GL11;
-import org.w3c.dom.CharacterData;
 
 import java.awt.*;
 import java.awt.font.GlyphVector;
@@ -88,7 +85,7 @@ public class StringRenderer
     //todo Add support for the "k" code which randomly replaces letters on each render (used on
     //todo Pre-sort by texture to minimize binds; can store colors per glyph in string cache
     //todo Optimize the underline/strikethrough drawing to draw a single line for each run
-    public int drawString(String str, float startX, float startY, int initialColor, boolean shadowFlag)
+    public int drawString(MatrixStack matrices, String str, float startX, float startY, int initialColor, boolean shadowFlag)
     {
         /* Check for invalid arguments */
         if (str == null || str.isEmpty())
@@ -96,7 +93,7 @@ public class StringRenderer
             return 0;
         }
         if (shadowFlag) {
-            drawString(str, startX - 1, startY + 1, new Color(0, 0, 0, 115).getRGB(), false);
+            drawString(matrices, str, startX - 1, startY + 1, new Color(0, 0, 0, 115).getRGB(), false);
         }
 
         // Fix for what RenderLivingBase#setBrightness does
@@ -184,17 +181,17 @@ public class StringRenderer
             int g = color >> 8 & 0xff;
             int b = color & 0xff;
 
-//            GL11.glEnable(GL11.GL_BLEND);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+            RenderSystem.setShaderTexture(0, texture.textureName);
 
-            buffer.begin(VertexFormat.DrawMode.LINE_STRIP, VertexFormats.POSITION_COLOR_TEXTURE);
-            RenderSystem.bindTexture(texture.textureName);
+            buffer.vertex(matrices.peek().getModel(), x1, y1, 0).color(r, g, b, a).texture(texture.u1, texture.v1).next();
+            buffer.vertex(matrices.peek().getModel(), x1, y2, 0).color(r, g, b, a).texture(texture.u1, texture.v2).next();
+            buffer.vertex(matrices.peek().getModel(), x2, y2, 0).color(r, g, b, a).texture(texture.u2, texture.v2).next();
+            buffer.vertex(matrices.peek().getModel(), x2, y1, 0).color(r, g, b, a).texture(texture.u2, texture.v1).next();
+            buffer.end();
 
-            buffer.vertex(x1, y1, 0).color(r, g, b, a).texture(texture.u1, texture.v1).next();
-            buffer.vertex(x1, y2, 0).color(r, g, b, a).texture(texture.u1, texture.v2).next();
-            buffer.vertex(x2, y2, 0).color(r, g, b, a).texture(texture.u2, texture.v2).next();
-            buffer.vertex(x2, y1, 0).color(r, g, b, a).texture(texture.u2, texture.v1).next();
-
-            tessellator.draw();
+            BufferRenderer.draw(buffer);
         }
 
         /* Draw strikethrough and underlines if the string uses them anywhere */
@@ -205,7 +202,8 @@ public class StringRenderer
             /* Use initial color passed to renderString(); disable texturing to draw solid color lines */
             color = initialColor;
             RenderSystem.disableTexture();
-            buffer.begin(VertexFormat.DrawMode.LINE_STRIP, VertexFormats.POSITION_COLOR);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
             for (int glyphIndex = 0, colorIndex = 0; glyphIndex < entry.glyphs.length; glyphIndex++)
             {
@@ -241,10 +239,10 @@ public class StringRenderer
                     float y1 = startY + (UNDERLINE_OFFSET) / 2.0F;
                     float y2 = startY + (UNDERLINE_OFFSET + UNDERLINE_THICKNESS) / 2.0F;
 
-                    buffer.vertex(x1, y1, 0).color(r, g, b, a).next();
-                    buffer.vertex(x1, y2, 0).color(r, g, b, a).next();
-                    buffer.vertex(x2, y2, 0).color(r, g, b, a).next();
-                    buffer.vertex(x2, y1, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x1, y1, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x1, y2, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x2, y2, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x2, y1, 0).color(r, g, b, a).next();
                 }
 
                 /* Draw strikethrough in the middle of glyph if the style is enabled */
@@ -256,15 +254,16 @@ public class StringRenderer
                     float y1 = startY + (STRIKETHROUGH_OFFSET) / 2.0F;
                     float y2 = startY + (STRIKETHROUGH_OFFSET + STRIKETHROUGH_THICKNESS) / 2.0F;
 
-                    buffer.vertex(x1, y1, 0).color(r, g, b, a).next();
-                    buffer.vertex(x1, y2, 0).color(r, g, b, a).next();
-                    buffer.vertex(x2, y2, 0).color(r, g, b, a).next();
-                    buffer.vertex(x2, y1, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x1, y1, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x1, y2, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x2, y2, 0).color(r, g, b, a).next();
+                    buffer.vertex(matrices.peek().getModel(), x2, y1, 0).color(r, g, b, a).next();
                 }
             }
 
             /* Finish drawing the last strikethrough/underline segments */
-            tessellator.draw();
+            buffer.end();
+            BufferRenderer.draw(buffer);
             RenderSystem.enableTexture();
         }
 
