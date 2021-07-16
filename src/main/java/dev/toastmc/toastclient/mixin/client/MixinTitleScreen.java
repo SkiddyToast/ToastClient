@@ -43,7 +43,7 @@ public class MixinTitleScreen {
             method = {"render"}
     )
     private void on1(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci){
-        MinecraftClient.getInstance().getTextureManager().bindTexture(new Identifier("toastclient", "title/background.jpeg"));
+        RenderSystem.setShaderTexture(0, new Identifier("toastclient", "title/background.jpeg"));
         assert MinecraftClient.getInstance().currentScreen != null; // Shouldn't ever be null, as we are literally rendering screen
         int width = MinecraftClient.getInstance().currentScreen.width;
         int height = MinecraftClient.getInstance().currentScreen.height;
@@ -61,7 +61,7 @@ public class MixinTitleScreen {
                 height
         );
 //        TODO: Fix Shaders
-//        GLSLSandboxShader shader = GLSLSandboxShader.mandelbrotShader();
+//        GLSLSandboxShader shader = new GLSLSandboxShader("/assets/toastclient/shaders/mandelbrot.fsh");
 //        if(shader != null) shader.useShader(width, height, mouseX, mouseY, delta);
     }
 }
